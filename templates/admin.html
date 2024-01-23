@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #111;
+            color: #fff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            background-color: #333;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #007BFF;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            border: 1px solid #555;
+            padding: 8px; /* Adjusted padding */
+            text-align: left;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: #fff;
+        }
+
+        td {
+            background-color: #444;
+            color: #fff;
+        }
+
+        input[type="text"], input[type="password"], input[type="email"] {
+            margin-bottom: 10px; /* Adjusted margin */
+            padding: 8px; /* Adjusted padding */
+            border: 1px solid #555;
+            border-radius: 3px;
+            background-color: #444;
+            color: #fff;
+            width: calc(100% - 18px); /* Adjusted width */
+        }
+
+        input[type="submit"], button {
+            background-color: #007BFF;
+            color: #fff;
+            cursor: pointer;
+            padding: 8px; /* Adjusted padding */
+            border: none;
+            border-radius: 3px;
+        }
+
+        input[type="submit"]:hover, button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the Admin Page</h1>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Token</th>
+                    <th>Expiration</th>
+                    <th>Uses</th>
+                    <th>Groups</th>
+                    <th>Link</th>
+                    {% if has_desired_role %}
+                        <th>Action</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for token in all_tokens %}
+                    <tr>
+                        <td>{{ token.token_value }}</td>
+                        <td>{{ token.valid_until }}</td>
+                        <td>{{ token.uses_left }}</td>
+                        <td>{{ token.assigned_group }}</td>
+                        <td>
+                            <button onclick="copyToClipboard('{{ token.token_value }}')">Copy</button>
+                        </td>
+                        {% if has_desired_role %}
+                            <td>
+                                <form method="post" action="{{ url_for('delete_token') }}">
+                                    <input type="hidden" name="delete_token" value="{{ token.token_value }}">
+                                    <button type="submit">Delete</button>
+                                </form>
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if has_desired_role %}
+            <h3>Add New Token</h3>
+            <form method="post" action="{{ url_for('add_token') }}">
+                <label for="expiration_days">Expiration after n Days:</label>
+                <input type="number" id="expiration_days" name="expiration_days" min="1" max="30" required>
+                <label for="uses">Number of Uses:</label>
+                <input type="number" id="uses" name="uses" min="1" required>
+                <label for="assigned_group">Assigned group:</label>
+                <select id="assigned_group" name="assigned_group">
+                    <option value="">None</option>
+                    {% for group in groups %}
+                    <option value="{{ group.id }}">{{ group.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Add Token</button>
+            </form>
+        {% endif %}
+    </div>
+
+    <script>
+        function copyToClipboard(token) {
+            const inviteLink = "{{ url_for('register', _external=True, invite_token='') }}" + token;
+            navigator.clipboard.writeText(inviteLink)
+                .then(() => {
+                    console.log('Link copied to clipboard');
+                })
+                .catch((error) => {
+                    console.error('Unable to copy to clipboard', error);
+                });
+        }
+    </script>
+</body>
+</html>

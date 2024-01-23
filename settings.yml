@@ -1,0 +1,6 @@
+
+# Keycloak config
+server_url: "https://auth.example.com/"
+realm_name: "master"
+client_id: "pyinvite"
+client_secret_key: "secret-from-keycloak"
